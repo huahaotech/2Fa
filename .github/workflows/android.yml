@@ -80,5 +80,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: sms-forwarder-debug
+          name: authenticator-debug
           path: app/build/outputs/apk/debug/*.apk

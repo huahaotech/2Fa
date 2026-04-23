@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.derivedStateOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 val ComponentActivity.authDataStore by preferencesDataStore(name = "auth_store")
@@ -219,9 +221,7 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                ModernCard(
-                    modifier = Modifier.weight(1f)
-                ) {
+                ModernCard(modifier = Modifier.weight(1f)) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -699,15 +699,6 @@ fun PermissionItem(
     }
 }
 
-fun generateCode(entry: AuthEntry): String {
-    return try {
-        val timeStep = TotpGenerator.getTimeStep(entry.period)
-        TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
-    } catch (e: Exception) {
-        "Error"
-    }
-}
-
 @Composable
 fun AddManualScreen(
     onBackClick: () -> Unit,
@@ -884,7 +875,7 @@ fun AddManualScreen(
 
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val success = authStore.addAuthEntry(entry)
-                                    runOnUiThread {
+                                    withContext(Dispatchers.Main) {
                                         if (success) {
                                             Toast.makeText(context, "添加成功", Toast.LENGTH_SHORT).show()
                                             onAddSuccess()
