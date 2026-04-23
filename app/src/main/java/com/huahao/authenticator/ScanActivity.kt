@@ -199,10 +199,15 @@ class ScanActivity : ComponentActivity() {
         )
 
         CoroutineScope(Dispatchers.IO).launch {
-            authStore.addAuthEntry(entry)
+            val success = authStore.addAuthEntry(entry)
+            runOnUiThread {
+                if (success) {
+                    Toast.makeText(this@ScanActivity, "添加成功: ${issuer}: ${account}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@ScanActivity, "该验证码已存在", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-
-        Toast.makeText(this, "添加成功: ${issuer}: ${account}", Toast.LENGTH_SHORT).show()
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

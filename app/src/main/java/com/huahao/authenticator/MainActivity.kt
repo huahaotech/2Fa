@@ -318,6 +318,34 @@ fun MainScreen(
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
             ) {
+                // 从 Google Authenticator 导入按钮
+                Button(
+                    onClick = {
+                        if (!cameraGranted) {
+                            onRequestCameraPermission()
+                        } else {
+                            context.startActivity(Intent(context, ImportActivity::class.java))
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ImportExport,
+                            contentDescription = "从 Google Authenticator 导入",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("从 Google Authenticator 导入")
+                    }
+                }
                 // 手动添加按钮
                 Button(
                     onClick = onNavigateToAddManual,
@@ -748,11 +776,16 @@ fun AddManualScreen(
                                 )
 
                                 CoroutineScope(Dispatchers.IO).launch {
-                                    authStore.addAuthEntry(entry)
+                                    val success = authStore.addAuthEntry(entry)
+                                    runOnUiThread {
+                                        if (success) {
+                                            Toast.makeText(context, "添加成功", Toast.LENGTH_SHORT).show()
+                                            onAddSuccess()
+                                        } else {
+                                            errorMessage = "该验证码已存在"
+                                        }
+                                    }
                                 }
-
-                                Toast.makeText(context, "添加成功", Toast.LENGTH_SHORT).show()
-                                onAddSuccess()
                             } catch (e: Exception) {
                                 errorMessage = "添加失败: ${e.message}"
                             }

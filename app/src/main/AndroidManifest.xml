@@ -30,5 +30,10 @@
             android:name=".ScanActivity"
             android:exported="false"
             android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
+
+        <activity
+            android:name=".ImportActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
     </application>
 </manifest>

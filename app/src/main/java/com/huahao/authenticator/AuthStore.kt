@@ -26,13 +26,23 @@ class AuthStore(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    suspend fun addAuthEntry(entry: AuthEntry) {
+    suspend fun addAuthEntry(entry: AuthEntry): Boolean {
         val entries = authEntries.first()
+        // 检查是否存在相同的 secret
+        if (entries.any { it.secret == entry.secret }) {
+            return false // 已存在相同的 secret
+        }
         saveAuthEntries(entries + entry)
+        return true // 添加成功
     }
 
     suspend fun removeAuthEntry(id: String) {
         val entries = authEntries.first()
         saveAuthEntries(entries.filter { entry -> entry.id != id })
+    }
+
+    suspend fun hasDuplicateSecret(secret: String): Boolean {
+        val entries = authEntries.first()
+        return entries.any { it.secret == secret }
     }
 }
