@@ -56,7 +56,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var authStore: AuthStore
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private var onPermissionChanged: (() -> Unit)? = null
-    private var currentScreen by mutableStateOf("home") // home 或 settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +71,7 @@ class MainActivity : ComponentActivity() {
             val isDarkTheme = isSystemInDarkTheme()
             val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
+            var currentScreen by remember { mutableStateOf("home") } // home 或 settings
 
             MaterialTheme(
                 colorScheme = colorScheme,
@@ -98,7 +98,8 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         authStore = authStore,
                         permissionUpdateTrigger = permissionUpdateTrigger,
-                        onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+                        onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
+                        onNavigateToSettings = { currentScreen = "settings" }
                     )
                 } else {
                     SettingsScreen(
@@ -114,7 +115,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     authStore: AuthStore,
     permissionUpdateTrigger: Int,
-    onRequestCameraPermission: () -> Unit
+    onRequestCameraPermission: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
     val authEntries by authStore.authEntries.collectAsState(emptyList())
@@ -193,8 +195,8 @@ fun MainScreen(
                     label = { Text("首页") }
                 )
                 NavigationBarItem(
-                    selected = currentScreen == "settings",
-                    onClick = { currentScreen = "settings" },
+                    selected = false,
+                    onClick = onNavigateToSettings,
                     icon = { Icon(Icons.Outlined.Settings, contentDescription = "设置") },
                     label = { Text("设置") }
                 )
