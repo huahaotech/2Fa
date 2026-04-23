@@ -78,8 +78,7 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     authStore = authStore,
                     permissionUpdateTrigger = permissionUpdateTrigger,
-                    onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
-                    onNavigateToAddManual = { }
+                    onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
                 )
             }
         }
@@ -123,8 +122,8 @@ fun MainScreen(
                                     brush = Brush.linearGradient(
                                         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
                                     )
-                                ),
-                            contentAlignment = Alignment.Center
+                                )
+                                .wrapContentSize(Alignment.Center)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Key,
@@ -133,7 +132,7 @@ fun MainScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
                         Column {
                             Text(
                                 "身份验证助手",
@@ -188,7 +187,7 @@ fun MainScreen(
                                 contentDescription = null,
                                 tint = Color(0xFFEE4444)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     "相机权限",
@@ -210,7 +209,7 @@ fun MainScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
                 }
 
                 Card(
@@ -241,7 +240,7 @@ fun MainScreen(
                                     tint = Color(0xFF10B981)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     "验证码列表",
@@ -255,7 +254,7 @@ fun MainScreen(
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(Modifier.height(16.dp))
                         if (authEntries.isEmpty()) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -268,7 +267,7 @@ fun MainScreen(
                                         modifier = Modifier.size(64.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(Modifier.height(16.dp))
                                     Text(
                                         "暂无验证码",
                                         style = MaterialTheme.typography.bodyLarge,
@@ -334,16 +333,16 @@ fun MainScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Box(
-                                                    modifier = Modifier
-                                                        .size(32.dp)
-                                                        .clip(CircleShape)
-                                                        .background(
-                                                            brush = Brush.linearGradient(
-                                                                colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
-                                                            )
-                                                        ),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
+                                        )
+                                    )
+                                    .wrapContentSize(Alignment.Center)
+                            ) {
                                                     Icon(
                                                         imageVector = Icons.Filled.Security,
                                                         contentDescription = null,
@@ -351,15 +350,12 @@ fun MainScreen(
                                                         modifier = Modifier.size(16.dp)
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Spacer(Modifier.width(12.dp))
                                                 Text(
-                                                    if (entry.issuer.isNotBlank()) "${entry.issuer}: ${entry.account}" else entry.account,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    text = if (entry.issuer.isNotBlank()) "${entry.issuer}: ${entry.account}" else entry.account,
+                                                    modifier = Modifier
                                                 )
-                                                Spacer(modifier = Modifier.weight(1f))
+                                                Spacer(Modifier.weight(1f))
                                                 var showDeleteDialog by remember { mutableStateOf(false) }
                                                 IconButton(
                                                     onClick = { showDeleteDialog = true },
@@ -403,7 +399,7 @@ fun MainScreen(
                                                 }
                                             }
                                             
-                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Spacer(Modifier.height(16.dp))
                                             
                                             Box(
                                                 modifier = Modifier
@@ -420,8 +416,8 @@ fun MainScreen(
                                                         val clip = android.content.ClipData.newPlainText("验证码", code)
                                                         clipboard.setPrimaryClip(clip)
                                                         Toast.makeText(context, "验证码已复制", Toast.LENGTH_SHORT).show()
-                                                    },
-                                                contentAlignment = Alignment.Center
+                                                    }
+                                                    .wrapContentSize(Alignment.Center)
                                             ) {
                                                 Text(
                                                     text = code,
@@ -432,16 +428,14 @@ fun MainScreen(
                                                 )
                                             }
                                             
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(Modifier.height(12.dp))
                                             
                                             LinearProgressIndicator(
                                                 progress = progress,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(4.dp)
-                                                    .clip(RoundedCornerShape(2.dp)),
-                                                color = MaterialTheme.colorScheme.primary,
-                                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                                    .clip(RoundedCornerShape(2.dp))
                                             )
                                         }
                                     }
@@ -576,7 +570,7 @@ fun MainScreen(
                     Text("版本: $versionName ($versionCode)")
                     Text("包名: ${context.packageName}")
                     Text("开发者: Huahao")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text("功能介绍:")
                     Text("• 支持 Google、GitHub、Steam 等平台的二步验证")
                     Text("• 扫描二维码添加验证码")
@@ -584,7 +578,7 @@ fun MainScreen(
                     Text("• 从 Google Authenticator 导入验证码")
                     Text("• 实时动态生成验证码")
                     Text("• 点击验证码复制到剪贴板")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text("安全信息:")
                     Text("• 验证码数据存储在本地设备上")
                     Text("• 不会上传任何数据到服务器")
@@ -681,13 +675,10 @@ fun AuthEntryItem(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    if (entry.issuer.isNotBlank()) "${entry.issuer}: ${entry.account}" else entry.account,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    text = if (entry.issuer.isNotBlank()) "${entry.issuer}: ${entry.account}" else entry.account,
+                    modifier = Modifier
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
                 IconButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier
@@ -701,7 +692,7 @@ fun AuthEntryItem(
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
             
             Box(
                 modifier = Modifier
@@ -730,16 +721,14 @@ fun AuthEntryItem(
                 )
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
             
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    .clip(RoundedCornerShape(2.dp))
             )
         }
     }
@@ -875,8 +864,8 @@ fun AddManualScreen(
                                     brush = Brush.linearGradient(
                                         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
                                     )
-                                ),
-                            contentAlignment = Alignment.Center
+                                )
+                                .wrapContentSize(Alignment.Center)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Key,
@@ -885,7 +874,7 @@ fun AddManualScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
                         Column {
                             Text(
                                 "手动添加验证码",
@@ -986,7 +975,7 @@ fun AddManualScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     OutlinedTextField(
                         value = period,
