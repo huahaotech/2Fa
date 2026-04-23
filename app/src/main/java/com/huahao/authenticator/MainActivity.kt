@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var authStore: AuthStore
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private var onPermissionChanged: (() -> Unit)? = null
+    private var currentScreen by mutableStateOf("home") // home 或 settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,11 +94,17 @@ class MainActivity : ComponentActivity() {
                     onPermissionChanged = { permissionUpdateTrigger++ }
                 }
 
-                MainScreen(
-                    authStore = authStore,
-                    permissionUpdateTrigger = permissionUpdateTrigger,
-                    onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
-                )
+                if (currentScreen == "home") {
+                    MainScreen(
+                        authStore = authStore,
+                        permissionUpdateTrigger = permissionUpdateTrigger,
+                        onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+                    )
+                } else {
+                    SettingsScreen(
+                        onBackClick = { currentScreen = "home" }
+                    )
+                }
             }
         }
     }
@@ -186,8 +193,8 @@ fun MainScreen(
                     label = { Text("首页") }
                 )
                 NavigationBarItem(
-                    selected = false,
-                    onClick = { },
+                    selected = currentScreen == "settings",
+                    onClick = { currentScreen = "settings" },
                     icon = { Icon(Icons.Outlined.Settings, contentDescription = "设置") },
                     label = { Text("设置") }
                 )
@@ -278,7 +285,14 @@ fun MainScreen(
                         } else {
                             LazyColumn(modifier = Modifier.fillMaxSize()) {
                                 items(authEntries) {
-                                    AuthEntryItem(it)
+                                    AuthEntryItem(
+                                        entry = it,
+                                        onDelete = {
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                authStore.removeAuthEntry(it.id)
+                                            }
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -311,20 +325,18 @@ fun MainScreen(
 }
 
 @Composable
-fun AuthEntryItem(entry: AuthEntry) {
+fun AuthEntryItem(
+    entry: AuthEntry,
+    onDelete: () -> Unit
+) {
     val code = generateCode(entry)
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("验证码", code)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, "验证码已复制", Toast.LENGTH_SHORT).show()
-            },
+            .padding(vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -367,7 +379,13 @@ fun AuthEntryItem(entry: AuthEntry) {
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                    .padding(12.dp),
+                    .padding(12.dp)
+                    .clickable {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("验证码", code)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "验证码已复制", Toast.LENGTH_SHORT).show()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -377,7 +395,52 @@ fun AuthEntryItem(entry: AuthEntry) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "删除",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text("确认删除")
+            },
+            text = {
+                Text("删除此验证码后，您可能无法登录相关账户。确定要删除吗？")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text("删除", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
     }
 }
 
@@ -457,5 +520,218 @@ fun generateCode(entry: AuthEntry): String {
         TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
     } catch (e: Exception) {
         "Error"
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    onBackClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+    val versionName = packageInfo.versionName
+    val versionCode = packageInfo.versionCode
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "设置",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "应用设置和信息",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                )
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            ModernCard {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF667EEA).copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = null,
+                                tint = Color(0xFF667EEA)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "应用信息",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "版本信息和关于应用",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "应用版本",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            "$versionName ($versionCode)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "包名",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            context.packageName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "开发者",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            "Huahao",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            ModernCard {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF10B981).copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Security,
+                                contentDescription = null,
+                                tint = Color(0xFF10B981)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "安全信息",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "关于应用安全的说明",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "• 验证码数据存储在本地设备上",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• 不会上传任何数据到服务器",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• 支持 Google、GitHub、Steam 等平台",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• 使用标准 TOTP 协议生成验证码",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
     }
 }
