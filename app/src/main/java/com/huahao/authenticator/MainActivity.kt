@@ -313,13 +313,13 @@ fun MainScreen(
 @Composable
 fun AuthEntryItem(entry: AuthEntry) {
     val code = generateCode(entry)
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable {
-                val context = LocalContext.current
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText("验证码", code)
                 clipboard.setPrimaryClip(clip)
