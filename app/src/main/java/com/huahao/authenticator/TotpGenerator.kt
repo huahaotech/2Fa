@@ -17,8 +17,16 @@ class TotpGenerator {
                 value = value shr 8
             }
 
-            val mac = Mac.getInstance(algorithm)
-            mac.init(SecretKeySpec(key, algorithm))
+            // 转换算法名称为 Java 兼容格式
+            val javaAlgorithm = when (algorithm.uppercase()) {
+                "SHA1" -> "HmacSHA1"
+                "SHA256" -> "HmacSHA256"
+                "SHA512" -> "HmacSHA512"
+                else -> "HmacSHA1"
+            }
+
+            val mac = Mac.getInstance(javaAlgorithm)
+            mac.init(SecretKeySpec(key, javaAlgorithm))
             val hash = mac.doFinal(data)
 
             val offset = hash[hash.size - 1].toInt() and 0x0F
@@ -27,7 +35,7 @@ class TotpGenerator {
                     ((hash[offset + 2].toInt() and 0xFF) shl 8) or
                     (hash[offset + 3].toInt() and 0xFF)
 
-            var result = code % Math.pow(10.0, digits.toDouble()).toInt()
+            val result = code % Math.pow(10.0, digits.toDouble()).toInt()
             return String.format("%0${digits}d", result)
         }
 
@@ -51,6 +59,11 @@ class TotpGenerator {
                     result.add(((value shr (bits - 8)) and 0xFF).toByte())
                     bits -= 8
                 }
+            }
+
+            // 处理剩余的 bits
+            if (bits > 0) {
+                result.add(((value shl (8 - bits)) and 0xFF).toByte())
             }
 
             return result.toByteArray()

@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
             val isDarkTheme = isSystemInDarkTheme()
             val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
-            var currentScreen by remember { mutableStateOf("home") } // home 或 settings
+            var currentScreen by remember { mutableStateOf("home") } // home, settings, add_manual
 
             MaterialTheme(
                 colorScheme = colorScheme,
@@ -94,17 +94,27 @@ class MainActivity : ComponentActivity() {
                     onPermissionChanged = { permissionUpdateTrigger++ }
                 }
 
-                if (currentScreen == "home") {
-                    MainScreen(
-                        authStore = authStore,
-                        permissionUpdateTrigger = permissionUpdateTrigger,
-                        onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
-                        onNavigateToSettings = { currentScreen = "settings" }
-                    )
-                } else {
-                    SettingsScreen(
-                        onBackClick = { currentScreen = "home" }
-                    )
+                when (currentScreen) {
+                    "home" -> {
+                        MainScreen(
+                            authStore = authStore,
+                            permissionUpdateTrigger = permissionUpdateTrigger,
+                            onRequestCameraPermission = { requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
+                            onNavigateToSettings = { currentScreen = "settings" },
+                            onNavigateToAddManual = { currentScreen = "add_manual" }
+                        )
+                    }
+                    "settings" -> {
+                        SettingsScreen(
+                            onBackClick = { currentScreen = "home" }
+                        )
+                    }
+                    "add_manual" -> {
+                        AddManualScreen(
+                            onBackClick = { currentScreen = "home" },
+                            onAddSuccess = { currentScreen = "home" }
+                        )
+                    }
                 }
             }
         }
@@ -116,7 +126,8 @@ fun MainScreen(
     authStore: AuthStore,
     permissionUpdateTrigger: Int,
     onRequestCameraPermission: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToAddManual: () -> Unit
 ) {
     val context = LocalContext.current
     val authEntries by authStore.authEntries.collectAsState(emptyList())
@@ -302,25 +313,62 @@ fun MainScreen(
                 }
             }
 
-            FloatingActionButton(
-                onClick = {
-                    if (!cameraGranted) {
-                        onRequestCameraPermission()
-                    } else {
-                        context.startActivity(Intent(context, ScanActivity::class.java))
-                    }
-                },
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
-                    .size(56.dp),
-                containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "添加",
-                    modifier = Modifier.size(28.dp)
-                )
+                // 手动添加按钮
+                Button(
+                    onClick = onNavigateToAddManual,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Key,
+                            contentDescription = "手动添加",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("手动添加验证码")
+                    }
+                }
+                // 扫描添加按钮
+                Button(
+                    onClick = {
+                        if (!cameraGranted) {
+                            onRequestCameraPermission()
+                        } else {
+                            context.startActivity(Intent(context, ScanActivity::class.java))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.QrCodeScanner,
+                            contentDescription = "扫描添加",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("扫描二维码添加")
+                    }
+                }
             }
         }
     }
@@ -522,6 +570,206 @@ fun generateCode(entry: AuthEntry): String {
         TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
     } catch (e: Exception) {
         "Error"
+    }
+}
+
+@Composable
+fun AddManualScreen(
+    onBackClick: () -> Unit,
+    onAddSuccess: () -> Unit
+) {
+    val context = LocalContext.current
+    val authStore = AuthStore((context as ComponentActivity).authDataStore)
+    
+    var issuer by remember { mutableStateOf("") }
+    var account by remember { mutableStateOf("") }
+    var secret by remember { mutableStateOf("") }
+    var algorithm by remember { mutableStateOf("SHA1") }
+    var digits by remember { mutableStateOf("6") }
+    var period by remember { mutableStateOf("30") }
+    var errorMessage by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Key,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "手动添加验证码",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "输入验证码信息",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                )
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            ModernCard {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    if (errorMessage.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                                .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+                                .padding(12.dp)
+                        ) {
+                            Text(
+                                errorMessage,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = issuer,
+                        onValueChange = { issuer = it },
+                        label = { Text("服务提供商 (如: GitHub)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = account,
+                        onValueChange = { account = it },
+                        label = { Text("账号 (如: username)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = secret,
+                        onValueChange = { secret = it },
+                        label = { Text("密钥 (Secret)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = algorithm,
+                                onValueChange = { algorithm = it },
+                                label = { Text("算法") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 8.dp)
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = digits,
+                                onValueChange = { digits = it },
+                                label = { Text("位数") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = period,
+                        onValueChange = { period = it },
+                        label = { Text("周期 (秒)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = {
+                            errorMessage = ""
+                            if (secret.isBlank()) {
+                                errorMessage = "密钥不能为空"
+                                return@Button
+                            }
+                            if (account.isBlank()) {
+                                errorMessage = "账号不能为空"
+                                return@Button
+                            }
+
+                            try {
+                                val entry = AuthEntry(
+                                    id = UUID.randomUUID().toString(),
+                                    issuer = issuer,
+                                    account = account,
+                                    secret = secret,
+                                    algorithm = algorithm,
+                                    digits = digits.toInt(),
+                                    period = period.toInt()
+                                )
+
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    authStore.addAuthEntry(entry)
+                                }
+
+                                Toast.makeText(context, "添加成功", Toast.LENGTH_SHORT).show()
+                                onAddSuccess()
+                            } catch (e: Exception) {
+                                errorMessage = "添加失败: ${e.message}"
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("添加验证码", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
     }
 }
 
