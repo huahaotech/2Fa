@@ -40,7 +40,7 @@ class AddManualActivity : ComponentActivity() {
 fun AddManualScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     val authStore = AuthStore((context as ComponentActivity).authDataStore)
-    
+
     var issuer by remember { mutableStateOf("") }
     var account by remember { mutableStateOf("") }
     var secret by remember { mutableStateOf("") }
@@ -62,8 +62,8 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                                     brush = Brush.linearGradient(
                                         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
                                     )
-                                )
-                                .wrapContentSize(Alignment.Center)
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Key,
@@ -72,15 +72,15 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                "手动添加验证码",
+                                text = "手动添加验证码",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "输入验证码信息",
+                                text = "输入验证码信息",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -122,7 +122,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                                 .padding(12.dp)
                         ) {
                             Text(
-                                errorMessage,
+                                text = errorMessage,
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -180,7 +180,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                             )
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
                         value = period,
@@ -190,7 +190,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                             .fillMaxWidth()
                     )
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = {
                             errorMessage = ""
@@ -237,7 +237,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text("添加验证码", fontSize = 16.sp)
+                        Text(text = "添加验证码", fontSize = 16.sp)
                     }
                 }
             }

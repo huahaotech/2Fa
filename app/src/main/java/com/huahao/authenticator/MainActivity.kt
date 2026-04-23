@@ -37,9 +37,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectAsState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.derivedStateOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -86,10 +87,9 @@ fun MainScreen(
     val authEntries by authStore.authEntries.collectAsState(emptyList())
     var showAboutDialog by remember { mutableStateOf(false) }
 
-    val cameraGranted by remember(permissionUpdateTrigger) {
-        derivedStateOf {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        }
+    var cameraGranted by remember { mutableStateOf(false) }
+    LaunchedEffect(permissionUpdateTrigger) {
+        cameraGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     }
 
     Scaffold(
@@ -113,8 +113,8 @@ fun MainScreen(
                                     brush = Brush.linearGradient(
                                         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
                                     )
-                                )
-                                .wrapContentSize(Alignment.Center)
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Key,
@@ -123,7 +123,7 @@ fun MainScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
                                 text = "身份验证助手",
@@ -178,7 +178,7 @@ fun MainScreen(
                                 contentDescription = null,
                                 tint = Color(0xFFEE4444)
                             )
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "相机权限",
@@ -200,7 +200,7 @@ fun MainScreen(
                             }
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 Card(
@@ -222,8 +222,8 @@ fun MainScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFF10B981).copy(alpha = 0.1f))
-                                    .wrapContentSize(Alignment.Center)
+                                    .background(Color(0xFF10B981).copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.List,
@@ -231,7 +231,7 @@ fun MainScreen(
                                     tint = Color(0xFF10B981)
                                 )
                             }
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "验证码列表",
@@ -245,7 +245,7 @@ fun MainScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         if (authEntries.isEmpty()) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -258,7 +258,7 @@ fun MainScreen(
                                         modifier = Modifier.size(64.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                     )
-                                    Spacer(Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
                                     Text(
                                         text = "暂无验证码",
                                         style = MaterialTheme.typography.bodyLarge,
@@ -313,7 +313,7 @@ fun MainScreen(
                             modifier = Modifier.size(20.dp),
                             tint = Color.White
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("从 Google Authenticator 导入")
                     }
                 }
@@ -337,7 +337,7 @@ fun MainScreen(
                             modifier = Modifier.size(20.dp),
                             tint = Color.White
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("手动添加验证码")
                     }
                 }
@@ -365,7 +365,7 @@ fun MainScreen(
                             modifier = Modifier.size(20.dp),
                             tint = Color.White
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text("扫描二维码添加")
                     }
                 }
@@ -386,8 +386,8 @@ fun MainScreen(
                                 brush = Brush.linearGradient(
                                     colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
                                 )
-                            )
-                            .wrapContentSize(Alignment.Center)
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Security,
@@ -405,7 +405,7 @@ fun MainScreen(
                     Text("版本: 1.0.0")
                     Text("包名: com.huahao.authenticator")
                     Text("开发者: Huahao")
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text("功能介绍:")
                     Text("• 支持 Google、GitHub、Steam 等平台的二步验证")
                     Text("• 扫描二维码添加验证码")
@@ -413,7 +413,7 @@ fun MainScreen(
                     Text("• 从 Google Authenticator 导入验证码")
                     Text("• 实时动态生成验证码")
                     Text("• 点击验证码复制到剪贴板")
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text("安全信息:")
                     Text("• 验证码数据存储在本地设备上")
                     Text("• 不会上传任何数据到服务器")
@@ -439,34 +439,29 @@ fun AuthEntryCard(
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val currentTime by remember {
-        flow {
-            while (true) {
-                emit(System.currentTimeMillis() / 1000L)
-                delay(1000L)
-            }
-        }
-    }.collectAsState(initial = System.currentTimeMillis() / 1000L)
-
-    val code by remember(currentTime) {
-        derivedStateOf {
-            try {
-                val timeStep = currentTime / entry.period
-                TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
-            } catch (e: Exception) {
-                "Error"
-            }
+    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis() / 1000L) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = System.currentTimeMillis() / 1000L
+            delay(1000L)
         }
     }
 
-    val progress by remember(currentTime) {
-        derivedStateOf {
+    val code = remember(currentTime) {
+        try {
             val timeStep = currentTime / entry.period
-            val nextTimeStep = timeStep + 1
-            val nextTime = nextTimeStep * entry.period
-            val remainingTime = nextTime - currentTime
-            remainingTime.toFloat() / entry.period.toFloat()
+            TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
+        } catch (e: Exception) {
+            "Error"
         }
+    }
+
+    val progress = remember(currentTime) {
+        val timeStep = currentTime / entry.period
+        val nextTimeStep = timeStep + 1
+        val nextTime = nextTimeStep * entry.period
+        val remainingTime = nextTime - currentTime
+        remainingTime.toFloat() / entry.period.toFloat()
     }
 
     Card(
@@ -496,8 +491,8 @@ fun AuthEntryCard(
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
                             )
-                        )
-                        .wrapContentSize(Alignment.Center)
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Security,
@@ -544,8 +539,8 @@ fun AuthEntryCard(
                         val clip = android.content.ClipData.newPlainText("验证码", code)
                         clipboard.setPrimaryClip(clip)
                         Toast.makeText(context, "验证码已复制", Toast.LENGTH_SHORT).show()
-                    }
-                    .wrapContentSize(Alignment.Center)
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = code,
@@ -556,7 +551,7 @@ fun AuthEntryCard(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             LinearProgressIndicator(
                 progress = { progress },
