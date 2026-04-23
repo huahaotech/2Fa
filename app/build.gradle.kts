@@ -127,8 +127,7 @@ dependencies {
     // Networking
     implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
     
-    // TOTP 验证码生成
-    implementation("com.google.android.apps.authenticator2:authenticator-lib:1.0.0")
+
     
     // 二维码扫描
     implementation("com.google.mlkit:barcode-scanning:17.2.0")

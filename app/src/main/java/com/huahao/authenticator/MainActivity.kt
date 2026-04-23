@@ -147,7 +147,7 @@ fun MainScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                "两步验证助手",
+                                "身份验证助手",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
