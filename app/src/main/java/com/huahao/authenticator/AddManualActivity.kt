@@ -62,8 +62,8 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                                     brush = Brush.linearGradient(
                                         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)
                                     )
-                                ),
-                            contentAlignment = Alignment.Center
+                                )
+                                .wrapContentSize(Alignment.Center)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Key,
@@ -72,7 +72,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
                         Column {
                             Text(
                                 "手动添加验证码",
@@ -180,7 +180,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     OutlinedTextField(
                         value = period,
@@ -190,7 +190,7 @@ fun AddManualScreen(onBackClick: () -> Unit) {
                             .fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(Modifier.height(24.dp))
                     Button(
                         onClick = {
                             errorMessage = ""
