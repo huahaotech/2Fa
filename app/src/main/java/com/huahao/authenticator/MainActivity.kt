@@ -13,8 +13,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,7 +28,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -69,8 +66,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val isDarkTheme = isSystemInDarkTheme()
-            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+            val colorScheme = lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
 
             MaterialTheme(
@@ -83,9 +79,9 @@ class MainActivity : ComponentActivity() {
                         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
                         activity.window.statusBarColor = AndroidColor.TRANSPARENT
                         val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-                        controller.isAppearanceLightStatusBars = !isDarkTheme
+                        controller.isAppearanceLightStatusBars = true
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                            controller.isAppearanceLightNavigationBars = true
                         }
                     } catch (_: Throwable) {}
                 }
@@ -354,50 +350,13 @@ fun SettingsTab() {
         contentPadding = PaddingValues(vertical = 16.dp)
     ) {
         item {
-            ModernCard {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "关于应用",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("身份验证助手 v1.0.0")
-                    Text("包名: com.huahao.authenticator")
-                    Text("开发者: Huahao")
-                }
-            }
+            ModernCard {}
         }
         item {
-            ModernCard {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "功能介绍",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("• 支持 Google、GitHub、Steam 等平台的二步验证")
-                    Text("• 扫描二维码添加验证码")
-                    Text("• 实时动态生成验证码")
-                    Text("• 点击验证码复制到剪贴板")
-                }
-            }
+            ModernCard {}
         }
         item {
-            ModernCard {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "安全信息",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("• 验证码数据存储在本地设备上")
-                    Text("• 不会上传任何数据到服务器")
-                    Text("• 使用标准 TOTP 协议生成验证码")
-                }
-            }
+            ModernCard {}
         }
     }
 }
@@ -589,7 +548,7 @@ fun AuthCodeCard(
 @Composable
 fun ModernCard(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit = {}
 ) {
     Card(
         modifier = modifier,
