@@ -67,13 +67,27 @@ class ScanActivity : ComponentActivity() {
         }
 
         setContent {
-            val colorScheme = lightColorScheme()
+            val isDarkTheme = isSystemInDarkTheme()
+            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
 
             MaterialTheme(
                 colorScheme = colorScheme,
                 typography = Typography()
             ) {
+                val activity = LocalContext.current as Activity
+                SideEffect {
+                    try {
+                        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                        activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
+                        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+                        controller.isAppearanceLightStatusBars = !isDarkTheme
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                        }
+                    } catch (_: Throwable) {}
+                }
+
                 SideEffect {
                     onPermissionChanged = { permissionUpdateTrigger++ }
                 }
@@ -215,7 +229,7 @@ fun ScanScreen(
 ) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "扫描二维码",
@@ -226,13 +240,16 @@ fun ScanScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         }
-    ) { paddingValues ->
+    ) {
         Column(
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(it)
                 .fillMaxSize()
         ) {
             Box(
@@ -289,13 +306,14 @@ fun ScanScreen(
                         text = "将二维码对准扫描框",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "系统将自动识别",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
                     )
                 }

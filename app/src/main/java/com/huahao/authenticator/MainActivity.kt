@@ -1,9 +1,12 @@
 package com.huahao.authenticator
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color as AndroidColor
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,10 +62,27 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val isDarkTheme = isSystemInDarkTheme()
+            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+            var permissionUpdateTrigger by remember { mutableStateOf(0) }
+
             MaterialTheme(
-                colorScheme = lightColorScheme(),
+                colorScheme = colorScheme,
                 typography = Typography()
             ) {
+                val activity = LocalContext.current as Activity
+                SideEffect {
+                    try {
+                        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                        activity.window.statusBarColor = AndroidColor.TRANSPARENT
+                        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+                        controller.isAppearanceLightStatusBars = !isDarkTheme
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                        }
+                    } catch (_: Throwable) {}
+                }
+
                 MainScreen(
                     authStore = authStore,
                     permissionUpdateTrigger = permissionUpdateTrigger,
@@ -96,8 +118,7 @@ fun MainScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color.Transparent
                 )
             )
         },
@@ -117,72 +138,74 @@ fun MainScreen(
                 Icon(Icons.Default.QrCodeScanner, contentDescription = "扫描")
             }
         }
-    ) { paddingValues ->
+    ) {
         Box(
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(it)
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer
                         )
                     )
                 )
         ) {
-            if (authEntries.isEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Box(
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (authEntries.isEmpty()) {
+                    Column(
                         modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                                    )
-                                )
-                            )
-                            .wrapContentSize(Alignment.Center)
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            Icons.Default.Security,
-                            contentDescription = null,
-                            modifier = Modifier.size(60.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                                )
+                                .wrapContentSize(Alignment.Center)
+                        ) {
+                            Icon(
+                                Icons.Default.Security,
+                                contentDescription = null,
+                                modifier = Modifier.size(60.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Text(
+                            text = "暂无验证码",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "点击右下角按钮扫描二维码添加",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Text(
-                        text = "暂无验证码",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "点击右下角按钮扫描二维码添加",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(authEntries) { entry ->
-                        AuthCodeCard(
-                            entry = entry,
-                            authStore = authStore
-                        )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(authEntries) {
+                            AuthCodeCard(entry = it, authStore = authStore)
+                        }
                     }
                 }
             }
