@@ -1,7 +1,10 @@
 package com.huahao.authenticator
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
+import android.graphics.Color as AndroidColor
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -31,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -67,8 +72,7 @@ class ScanActivity : ComponentActivity() {
         }
 
         setContent {
-            val isDarkTheme = isSystemInDarkTheme()
-            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+            val colorScheme = lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
 
             MaterialTheme(
@@ -79,11 +83,11 @@ class ScanActivity : ComponentActivity() {
                 SideEffect {
                     try {
                         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-                        activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
+                        activity.window.statusBarColor = AndroidColor.TRANSPARENT
                         val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-                        controller.isAppearanceLightStatusBars = !isDarkTheme
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                        controller.isAppearanceLightStatusBars = true
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            controller.isAppearanceLightNavigationBars = true
                         }
                     } catch (_: Throwable) {}
                 }
@@ -256,7 +260,9 @@ fun ScanScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 AndroidView(
-                    factory = { _ -> previewView },
+                    factory = {
+                        previewView
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
 

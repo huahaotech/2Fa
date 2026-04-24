@@ -4,12 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Color as AndroidColor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,12 +20,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
@@ -43,8 +43,7 @@ class ExportActivity : ComponentActivity() {
         val entry = parseEntry(entryStr)
 
         setContent {
-            val isDarkTheme = isSystemInDarkTheme()
-            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+            val colorScheme = lightColorScheme()
 
             MaterialTheme(
                 colorScheme = colorScheme,
@@ -54,11 +53,11 @@ class ExportActivity : ComponentActivity() {
                 SideEffect {
                     try {
                         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-                        activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
+                        activity.window.statusBarColor = AndroidColor.TRANSPARENT
                         val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-                        controller.isAppearanceLightStatusBars = !isDarkTheme
+                        controller.isAppearanceLightStatusBars = true
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                            controller.isAppearanceLightNavigationBars = true
                         }
                     } catch (_: Throwable) {}
                 }
@@ -97,10 +96,7 @@ fun ExportScreen(
     val qrCodeBitmap by remember {
         mutableStateOf(
             entry?.let {
-                QRCodeGenerator.generateQRCode(
-                    data = "otpauth://totp/${it.issuer}:${it.account}?secret=${it.secret}&issuer=${it.issuer}&algorithm=${it.algorithm}&digits=${it.digits}&period=${it.period}",
-                    size = 400
-                )
+                QRCodeGenerator.generate(it, 400)
             }
         )
     }
@@ -188,7 +184,7 @@ fun ExportScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        qrCodeBitmap?.let {bitmap ->
+                        qrCodeBitmap?.let { bitmap ->
                             AndroidView(
                                 factory = {
                                     android.widget.ImageView(it).apply {

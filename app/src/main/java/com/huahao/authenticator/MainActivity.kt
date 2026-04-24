@@ -62,8 +62,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val isDarkTheme = isSystemInDarkTheme()
-            val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+            val colorScheme = lightColorScheme()
             var permissionUpdateTrigger by remember { mutableStateOf(0) }
 
             MaterialTheme(
@@ -76,9 +75,9 @@ class MainActivity : ComponentActivity() {
                         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
                         activity.window.statusBarColor = AndroidColor.TRANSPARENT
                         val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-                        controller.isAppearanceLightStatusBars = !isDarkTheme
+                        controller.isAppearanceLightStatusBars = true
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            controller.isAppearanceLightNavigationBars = !isDarkTheme
+                            controller.isAppearanceLightNavigationBars = true
                         }
                     } catch (_: Throwable) {}
                 }
