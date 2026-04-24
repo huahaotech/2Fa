@@ -70,8 +70,24 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+        }
+    }
+    
+    splits {
+        abi {
+            isEnable = false
+        }
+    }
+    
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/*.kotlin_module"
+            excludes += "**/*.kotlin_metadata"
+            excludes += "**/*.kotlin_builtins"
         }
     }
     compileOptions {
