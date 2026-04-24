@@ -110,12 +110,6 @@ fun AuthenticatorApp(
     val context = LocalContext.current
     val authEntries by authStore.authEntries.collectAsState(emptyList())
     var showAboutDialog by remember { mutableStateOf(false) }
-    var currentTab by remember { mutableStateOf(0) }
-
-    val tabs = listOf(
-        "首页" to Icons.Default.Home,
-        "设置" to Icons.Default.Settings
-    )
 
     val cameraGranted by remember(permissionUpdateTrigger) {
         derivedStateOf {
@@ -179,70 +173,35 @@ fun AuthenticatorApp(
                 )
             )
         },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                tabs.forEachIndexed { index, (label, icon) ->
-                    NavigationBarItem(
-                        selected = currentTab == index,
-                        onClick = { currentTab = index },
-                        icon = {
-                            val filledIcon = when (index) {
-                                0 -> Icons.Filled.Home
-                                1 -> Icons.Filled.Settings
-                                else -> Icons.Filled.Home
-                            }
-                            val outlinedIcon = when (index) {
-                                0 -> Icons.Outlined.Home
-                                1 -> Icons.Outlined.Settings
-                                else -> Icons.Outlined.Home
-                            }
-                            Icon(
-                                if (currentTab == index) filledIcon else outlinedIcon,
-                                contentDescription = label
-                            )
-                        },
-                        label = { Text(label) }
-                    )
-                }
-            }
-        },
         floatingActionButton = {
-            if (currentTab == 0) {
-                FloatingActionButton(
-                    onClick = {
-                        if (!cameraGranted) {
-                            onRequestCameraPermission()
-                        } else {
-                            context.startActivity(Intent(context, ScanActivity::class.java))
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp)
-                ) {
-                    Icon(Icons.Default.QrCodeScanner, contentDescription = "扫描")
-                }
+            FloatingActionButton(
+                onClick = {
+                    if (!cameraGranted) {
+                        onRequestCameraPermission()
+                    } else {
+                        context.startActivity(Intent(context, ScanActivity::class.java))
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            ) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = "扫描")
             }
         }
     ) {
         Box(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
-        ) {
-            when (currentTab) {
-                0 -> HomeTab(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+            ) {
+                HomeTab(
                     authStore = authStore,
                     authEntries = authEntries,
                     cameraGranted = cameraGranted,
                     onRequestCameraPermission = onRequestCameraPermission
                 )
-                1 -> SettingsTab()
             }
-        }
     }
 
     if (showAboutDialog) {
@@ -340,26 +299,7 @@ fun HomeTab(
     }
 }
 
-@Composable
-fun SettingsTab() {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp)
-    ) {
-        item {
-            ModernCard {}
-        }
-        item {
-            ModernCard {}
-        }
-        item {
-            ModernCard {}
-        }
-    }
-}
+
 
 @Composable
 fun AuthCodeCard(
