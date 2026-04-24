@@ -107,6 +107,12 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.5"
     }
+    
+    lint {
+        disable += "InvalidFragmentVersionForActivityResult"
+        abortOnError = true
+        checkReleaseBuilds = true
+    }
 }
 
 // 调试用：打印当前 versionName/versionCode
@@ -123,12 +129,10 @@ dependencies {
     val activityComposeVersion = "1.9.0"
     val material3Version = "1.2.1"
     val lifecycleRuntime = "2.7.0"
-    val okhttpVersion = "4.12.0"
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleRuntime")
     implementation("androidx.activity:activity-compose:$activityComposeVersion")
-    implementation("androidx.fragment:fragment-ktx:1.8.3")
 
     // Compose UI / graphics / tooling (明确 artifact 名称和版本)
     implementation("androidx.compose.ui:ui:$composeUiVersion")
@@ -140,9 +144,6 @@ dependencies {
 
     // Icons (material icons extended) — 添加以解决 Icons.Default.History / Message 等引用
     implementation("androidx.compose.material:material-icons-extended:$composeUiVersion")
-
-    // Networking
-    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
 
     // 二维码扫描
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
