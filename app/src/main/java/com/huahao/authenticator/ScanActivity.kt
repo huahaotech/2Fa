@@ -417,7 +417,7 @@ class BarcodeAnalyzer(private val onBarcodeDetected: (String) -> Unit) : ImageAn
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
                         val rawValue = barcode.rawValue
-                        if (rawValue != null && rawValue.startsWith("otpauth://totp/")) {
+                        if (rawValue != null && (rawValue.startsWith("otpauth://totp/") || rawValue.startsWith("otpauth-migration://"))) {
                             isScanned = true
                             onBarcodeDetected(rawValue)
                         }
