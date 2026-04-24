@@ -205,37 +205,119 @@ fun AuthenticatorApp(
     }
 
     if (showAboutDialog) {
-        ModernAlertDialog(
-            onDismissRequest = { showAboutDialog = false },
-            title = "关于",
-            content = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("身份验证助手")
-                    Text("版本: 1.0.0")
-                    Text("包名: com.huahao.authenticator")
-                    Text("开发者: Huahao")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("功能介绍:")
-                    Text("• 支持 Google、GitHub、Steam 等平台的二步验证")
-                    Text("• 扫描二维码添加验证码")
-                    Text("• 实时动态生成验证码")
-                    Text("• 点击验证码复制到剪贴板")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("安全信息:")
-                    Text("• 验证码数据存储在本地设备上")
-                    Text("• 不会上传任何数据到服务器")
-                    Text("• 使用标准 TOTP 协议生成验证码")
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+}
+
+@Composable
+fun AboutDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+    val packageName = context.packageName
+    val versionName = try {
+        packageManager.getPackageInfo(packageName, 0).versionName
+    } catch (e: Exception) {
+        "1.0.0"
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Security,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(40.dp)
+                    )
                 }
-            },
-            confirmButton = {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    "身份验证助手",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "版本 $versionName",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    "安全、高效的两步验证助手，支持 Google、GitHub、Steam 等多种平台的 TOTP 验证码生成。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "功能特性:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    "• 扫描二维码快速添加验证码",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    "• 实时动态生成 TOTP 验证码",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    "• 点击验证码一键复制到剪贴板",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    "• 导出二维码分享给其他设备",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "© 2026 华昊科技有限公司",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = { showAboutDialog = false },
-                    shape = RoundedCornerShape(12.dp)
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("确定")
                 }
             }
-        )
+        }
     }
 }
 
