@@ -1,4 +1,4 @@
-package com.huahao.authenticator
+package org.huahao.totp
 
 import android.util.Base64
 import java.net.URLDecoder

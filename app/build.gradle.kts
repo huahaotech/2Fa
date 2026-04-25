@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.huahao.authenticator"
+    namespace = "org.huahao.totp"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.huahao.authenticator"
+        applicationId = "org.huahao.totp"
         minSdk = 21
         targetSdk = 34
 

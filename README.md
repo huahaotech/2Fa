@@ -32,7 +32,7 @@
 ## 项目结构
 
 ```
-app/src/main/java/com/huahao/authenticator/
+app/src/main/java/org/huahao/totp/
 ├── MainActivity.kt           # 主界面
 ├── ScanActivity.kt           # 扫码界面
 ├── ExportActivity.kt         # 导出二维码界面

@@ -1,4 +1,4 @@
-package com.huahao.authenticator
+package org.huahao.totp
 
 import android.Manifest
 import android.app.Activity

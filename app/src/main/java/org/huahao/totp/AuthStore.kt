@@ -1,4 +1,4 @@
-package com.huahao.authenticator
+package org.huahao.totp
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

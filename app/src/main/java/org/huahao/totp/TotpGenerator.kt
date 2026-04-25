@@ -1,4 +1,4 @@
-package com.huahao.authenticator
+package org.huahao.totp
 
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException

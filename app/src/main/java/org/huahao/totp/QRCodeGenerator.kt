@@ -1,4 +1,4 @@
-package com.huahao.authenticator
+package org.huahao.totp
 
 import android.graphics.Bitmap
 import android.graphics.Color
