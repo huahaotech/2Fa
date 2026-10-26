@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +20,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Verify Android SDK 34
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:?Android SDK is missing from the runner}"
+          SDK_MANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$SDK_MANAGER"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          if [[ ! -f "$SDK_ROOT/platforms/android-34/android.jar" || ! -x "$SDK_ROOT/build-tools/34.0.0/aapt2" ]]; then
+            "$SDK_MANAGER" --install "platforms;android-34" "build-tools;34.0.0"
+          fi
+          test -f "$SDK_ROOT/platforms/android-34/android.jar"
+          test -x "$SDK_ROOT/build-tools/34.0.0/aapt2"
 
       - name: Decode keystore (from secret) if provided
         shell: bash
@@ -51,23 +63,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           export PATH=$PWD/gradle-8.2/bin:$PATH
-          gradle assembleDebug --no-daemon 2>&1 | tee build.log
-        continue-on-error: true
-
-      - name: Check build status
-        run: |
-          if grep -q "BUILD SUCCESSFUL" build.log; then
-            echo "Build succeeded"
-            exit 0
-          else
-            echo "Build failed"
-            cat build.log | tail -100
-            exit 1
-          fi
+          gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
 
       - name: Upload build log
-        if: always()
+        if: always() && hashFiles('build.log') != ''
         uses: actions/upload-artifact@v4
         with:
           name: build-log
