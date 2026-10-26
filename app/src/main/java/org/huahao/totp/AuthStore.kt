@@ -14,6 +14,20 @@ import kotlinx.serialization.json.Json
 val AUTH_ENTRIES_KEY = stringPreferencesKey("auth_entries")
 
 class AuthStore(private val dataStore: DataStore<Preferences>) {
+    suspend fun reorderAuthEntries(ids: List<String>) {
+        dataStore.edit { preferences ->
+            val entries = Json.decodeFromString<List<AuthEntry>>(
+                preferences[AUTH_ENTRIES_KEY] ?: "[]"
+            )
+            val byId = entries.associateBy { it.id }
+            val ordered = ids.distinct().mapNotNull { byId[it] }
+            val knownIds = ids.toSet()
+            preferences[AUTH_ENTRIES_KEY] = Json.encodeToString(
+                ordered + entries.filter { it.id !in knownIds }
+            )
+        }
+    }
+
     val authEntries: Flow<List<AuthEntry>> = dataStore.data
         .map {
             val entriesJson = it[AUTH_ENTRIES_KEY] ?: "[]"

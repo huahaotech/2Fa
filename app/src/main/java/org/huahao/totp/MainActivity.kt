@@ -16,8 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -166,7 +164,7 @@ fun AuthenticatorApp(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "已添加 ${authEntries.size} 个账号",
+                                "${authEntries.size} 个账号 · 长按拖动排序",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -381,17 +379,7 @@ fun HomeTab(
             )
         }
     } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            items(authEntries) {
-                AuthCodeCard(entry = it, authStore = authStore)
-            }
-        }
+        ReorderableAuthList(authEntries = authEntries, authStore = authStore)
     }
 }
 
@@ -445,7 +433,7 @@ fun AuthCodeCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -454,13 +442,13 @@ fun AuthCodeCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (entry.issuer.isNotBlank()) entry.issuer else "未命名",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = entry.issuer.ifBlank { "未命名" },
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (entry.account.isNotBlank() && entry.issuer.isNotBlank()) {
+                    if (entry.account.isNotBlank()) {
                         Text(
                             text = entry.account,
                             style = MaterialTheme.typography.bodySmall,
@@ -471,10 +459,32 @@ fun AuthCodeCard(
                     }
                 }
 
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = formatCode(code),
+                        maxLines = 1,
+                        softWrap = false,
+                        fontSize = 22.sp,
+                        lineHeight = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${(progress * entry.period).toInt()}s",
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 Box {
                     IconButton(
                         onClick = { showExportMenu = true },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Filled.MoreVert,
@@ -530,28 +540,7 @@ fun AuthCodeCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = formatCode(code),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 4.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "${(progress * 30).toInt()}s",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             LinearProgressIndicator(
                 progress = { progress },
