@@ -49,7 +49,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 val ComponentActivity.authDataStore by preferencesDataStore(name = "auth_store")
@@ -388,36 +387,23 @@ fun HomeTab(
 @Composable
 fun AuthCodeCard(
     entry: AuthEntry,
-    authStore: AuthStore
+    authStore: AuthStore,
+    currentTime: Long
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showExportMenu by remember { mutableStateOf(false) }
 
-    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis() / 1000L) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            currentTime = System.currentTimeMillis() / 1000L
-            delay(1000L)
-        }
-    }
-
-    val code = remember(currentTime) {
+    val timeStep = currentTime / entry.period
+    val remainingSeconds = entry.period - currentTime % entry.period
+    val progress = remainingSeconds.toFloat() / entry.period
+    val code = remember(timeStep, entry.secret, entry.digits, entry.algorithm) {
         try {
-            val timeStep = currentTime / entry.period
             TotpGenerator.generate(entry.secret, timeStep, entry.digits, entry.algorithm)
         } catch (e: Exception) {
             "------"
         }
-    }
-
-    val progress = remember(currentTime) {
-        val timeStep = currentTime / entry.period
-        val nextTimeStep = timeStep + 1
-        val nextTime = nextTimeStep * entry.period
-        val remainingTime = nextTime - currentTime
-        remainingTime.toFloat() / entry.period.toFloat()
     }
 
     ModernCard(
@@ -474,7 +460,7 @@ fun AuthCodeCard(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "${(progress * entry.period).toInt()}s",
+                        text = "${remainingSeconds}s",
                         fontSize = 11.sp,
                         lineHeight = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

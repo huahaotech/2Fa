@@ -18,11 +18,21 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 @Composable
 fun ReorderableAuthList(authEntries: List<AuthEntry>, authStore: AuthStore) {
+    // Every visible account uses the same wall-clock snapshot.
+    var currentTime by remember { mutableLongStateOf(System.currentTimeMillis() / 1000L) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val now = System.currentTimeMillis()
+            currentTime = now / 1000L
+            delay(1000L - now % 1000L)
+        }
+    }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -157,7 +167,7 @@ fun ReorderableAuthList(authEntries: List<AuthEntry>, authStore: AuthStore) {
                     shadowElevation = if (dragging) 8.dp.toPx() else 0f
                 }
             ) {
-                AuthCodeCard(entry = entry, authStore = authStore)
+                AuthCodeCard(entry = entry, authStore = authStore, currentTime = currentTime)
             }
         }
     }
